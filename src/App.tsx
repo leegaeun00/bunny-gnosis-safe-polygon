@@ -1,57 +1,61 @@
-import React, { useCallback } from 'react'
-import styled from 'styled-components'
-import { Button, Title } from '@gnosis.pm/safe-react-components'
-import { useSafeAppsSDK } from '@gnosis.pm/safe-apps-react-sdk'
+import React, {useState} from 'react';
+import { BrowserRouter as Router, Switch, Route, useHistory } from 'react-router-dom';
 
-const Container = styled.div`
-  padding: 1rem;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-`
+import { ZapComponent } from './components/zapComponent';
+import { PoolComponent } from './components/poolComponent';
+import { WidgetWrapper, ButtonContainer, BottomLargeMargin, PoolPageButton, ZapPageButton } from './components/styleComponents';
+import GlobalStyle from './GlobalStyle';
 
-const Link = styled.a`
-  margin-top: 8px;
-`
+const App: React.FC = () => {
 
-const SafeApp = (): React.ReactElement => {
-  const { sdk, safe } = useSafeAppsSDK()
+  const [page, setPage] = useState<string>('pool');
 
-  const submitTx = useCallback(async () => {
-    try {
-      const { safeTxHash } = await sdk.txs.send({
-        txs: [
-          {
-            to: safe.safeAddress,
-            value: '0',
-            data: '0x',
-          },
-        ],
-      })
-      console.log({ safeTxHash })
-      const safeTx = await sdk.txs.getBySafeTxHash(safeTxHash)
-      console.log({ safeTx })
-    } catch (e) {
-      console.error(e)
+  function PoolButton() {
+    const history = useHistory();
+
+    function handleClick() {
+      history.push('/');
+      setPage('pool');
     }
-  }, [safe, sdk])
+
+    return (
+        <PoolPageButton className={page==='pool' ? 'selected' : ''} size="md" color="primary" variant="outlined" onClick={handleClick}>
+          Pool
+        </PoolPageButton>)
+  }
+
+  function ZapButton() {
+    const history = useHistory();
+
+    function handleClick() {
+      history.push('/zap');
+      setPage('zap');
+    }
+
+    return (
+        <ZapPageButton className={page==='zap' ? 'selected' : ''} size="md" color="secondary" variant="outlined" onClick={handleClick}>
+          Zap
+        </ZapPageButton>)
+  }
 
   return (
-    <Container>
-      <Title size="md">Safe: {safe.safeAddress}</Title>
+      <WidgetWrapper>
+        <Router>
+          <BottomLargeMargin>
+            <ButtonContainer>
+              <div>
+                <PoolButton />
+                <ZapButton />
+              </div>
+            </ButtonContainer>
+          </BottomLargeMargin>
+          <Switch>
+            <Route path="/" exact component={PoolComponent}></Route>
+            <Route path="/zap" exact component={ZapComponent}></Route>
+          </Switch>
+        </Router>
 
-      <Button size="lg" color="primary" onClick={submitTx}>
-        Click to send a test transaction
-      </Button>
-
-      <Link href="https://github.com/gnosis/safe-apps-sdk" target="_blank" rel="noreferrer">
-        Documentation
-      </Link>
-    </Container>
-  )
+      </WidgetWrapper>
+  );
 }
-
-export default SafeApp
+export default App;
